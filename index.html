@@ -56,7 +56,7 @@
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: .92rem; white-space: nowrap; }
   th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--line); }
-  th { color: var(--muted); font-weight: 500; font-size: .8rem; }
+  th { color: var(--muted); font-weight: 500; font-size: .8rem; line-height: 1.2; vertical-align: bottom; }
   td:first-child, th:first-child { text-align: left; position: sticky; left: 0; background: var(--card); }
   td.pts { font-weight: 700; color: var(--accent); }
   .rank { color: var(--muted); font-weight: 500; margin-right: 4px; }
@@ -148,12 +148,12 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Joueur</th><th>Pts</th><th>MJ</th><th>V</th><th>N</th><th>D</th><th>BP</th><th>BC</th><th>Diff</th><th>% V</th><th>V/D</th></tr>
+          <tr><th>Joueur</th><th>Pts</th><th>MJ</th><th>V</th><th>N</th><th>D</th><th>Buts<br>marqués</th><th>Buts<br>encaissés</th><th>Diff</th><th>% V</th><th>V/D</th></tr>
         </thead>
         <tbody id="recap"></tbody>
       </table>
     </div>
-    <p class="muted">Victoire = 3 pts · Nul = 1 pt · MJ = matchs joués · BP/BC = buts pour/contre · V/D = victoires ÷ défaites</p>
+    <p class="muted">Victoire = 3 pts · Nul = 1 pt · MJ = matchs joués · V/D = victoires ÷ défaites</p>
   </section>
 
   <section>
