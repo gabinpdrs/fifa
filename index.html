@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1e88e5">
 <title>Compteur FIFA</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FIFA">
 <style>
   :root {
     --bg: #f3f8fd; --card: #ffffff; --line: #dce8f5; --text: #0f2a47; --muted: #6b819c;
@@ -15,8 +20,10 @@
   body { margin: 0; background: var(--bg); color: var(--text);
     font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   header { background: var(--accent); color: #fff; padding: 20px 16px 56px; }
-  header h1 { max-width: 640px; margin: 0 auto; font-size: 1.4rem; font-weight: 700; letter-spacing: .02em; }
-  header p { max-width: 640px; margin: 4px auto 0; opacity: .85; font-size: .9rem; }
+  header .in { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  header img { width: 44px; height: 44px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0, 0, 0, .2); }
+  header h1 { margin: 0; font-size: 1.4rem; font-weight: 700; letter-spacing: .02em; }
+  header p { margin: 2px 0 0; opacity: .85; font-size: .9rem; }
   main { max-width: 640px; margin: -40px auto 0; padding: 0 16px 48px; }
   h2 { font-size: .8rem; margin: 0 0 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
   section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(15, 42, 71, .05); }
@@ -30,34 +37,75 @@
   .row > button { flex: 0 0 auto; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .chip { background: var(--accent-soft); color: var(--accent); font-weight: 500; border: 1px solid var(--line); border-radius: 999px; padding: 4px 4px 4px 12px; display: flex; align-items: center; gap: 2px; }
+
+  /* Saisie du match */
   .match { display: grid; grid-template-columns: 1fr 16px 1fr; gap: 8px; align-items: center; }
-  .match .side { display: flex; flex-direction: column; gap: 8px; }
-  .match input[type=number] { text-align: center; font-size: 1.6rem; font-weight: 700; padding: 8px 4px; }
+  .match .side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
   .match .sep { text-align: center; color: var(--muted); }
+  .stepper { display: flex; gap: 6px; }
+  .stepper button { flex: 0 0 40px; padding: 0; font-size: 1.4rem; line-height: 1; background: var(--accent-soft); color: var(--accent); }
+  .stepper input { flex: 1; min-width: 0; text-align: center; font-size: 1.6rem; font-weight: 700; padding: 8px 2px; -moz-appearance: textfield; }
+  .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .full { width: 100%; margin-top: 12px; }
+  .editing-bar { display: none; align-items: center; justify-content: space-between; gap: 8px; background: var(--accent-soft); color: var(--accent); border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; font-size: .9rem; font-weight: 500; }
+  .editing .editing-bar { display: flex; }
   .msg { color: var(--lose); font-size: .9rem; min-height: 1.2em; margin-top: 8px; }
   .muted { color: var(--muted); font-size: .9rem; }
+
+  /* Tableaux */
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: .92rem; white-space: nowrap; }
   th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--line); }
   th { color: var(--muted); font-weight: 500; font-size: .8rem; }
-  td:first-child, th:first-child { text-align: left; }
+  td:first-child, th:first-child { text-align: left; position: sticky; left: 0; background: var(--card); }
+  td.pts { font-weight: 700; color: var(--accent); }
+  .rank { color: var(--muted); font-weight: 500; margin-right: 4px; }
   .w { color: var(--win); font-weight: 600; } .l { color: var(--lose); } .d { color: var(--draw); }
+
+  /* Forme */
+  .form-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .form-row:last-child { border-bottom: 0; }
+  .form-row .name { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .pills { display: flex; gap: 4px; }
+  .pill { width: 22px; height: 22px; border-radius: 6px; font-size: .7rem; font-weight: 700; display: grid; place-items: center; color: #fff; }
+  .pill.V { background: var(--win); } .pill.N { background: var(--draw); } .pill.D { background: var(--lose); }
+  .pill.empty { background: var(--line); }
+  .streak { font-size: .8rem; color: var(--muted); text-align: right; min-width: 84px; }
+  .streak b { color: var(--text); }
+
+  /* Face-à-face */
+  .h2h { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; text-align: center; margin-top: 16px; }
+  .h2h .big { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+  .h2h .lbl { font-size: .8rem; color: var(--muted); }
+  .h2h-goals { text-align: center; margin-top: 8px; }
+
+  /* Records */
+  .records { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .rec { background: var(--input); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .rec .t { font-size: .75rem; color: var(--muted); }
+  .rec .v { font-weight: 700; margin-top: 2px; }
+  .rec .s { font-size: .8rem; color: var(--muted); }
+
   ul.history { list-style: none; margin: 0; padding: 0; }
-  ul.history li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  ul.history li { display: flex; align-items: center; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--line); }
   ul.history .score { flex: 1; }
   ul.history .date { color: var(--muted); font-size: .8rem; }
+  ul.history li.is-editing { background: var(--accent-soft); border-radius: 8px; padding-left: 8px; }
   .win { font-weight: 700; color: var(--accent); }
   .tools { display: flex; gap: 8px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
 <header>
-  <h1>⚽ Compteur FIFA</h1>
-  <p>Nos matchs, nos stats.</p>
+  <div class="in">
+    <img src="icons/icon-180.png" alt="">
+    <div>
+      <h1>Compteur FIFA</h1>
+      <p>Nos matchs, nos stats.</p>
+    </div>
+  </div>
 </header>
 <main>
-
   <section>
     <h2>Joueurs</h2>
     <form id="addPlayer" class="row">
@@ -67,36 +115,66 @@
     <div id="players" class="chips"></div>
   </section>
 
-  <section>
-    <h2>Nouveau match</h2>
+  <section id="matchSection">
+    <h2 id="matchTitle">Nouveau match</h2>
     <form id="addMatch">
+      <div class="editing-bar"><span>Modification d’un match</span><button type="button" class="ghost" id="cancelEdit">Annuler</button></div>
       <div class="match">
         <div class="side">
           <select id="p1" aria-label="Joueur 1"></select>
-          <input id="s1" type="number" min="0" inputmode="numeric" value="0" aria-label="Buts joueur 1">
+          <div class="stepper">
+            <button type="button" data-step="s1" data-d="-1" aria-label="Retirer un but">−</button>
+            <input id="s1" type="number" min="0" inputmode="numeric" value="0" aria-label="Buts joueur 1">
+            <button type="button" data-step="s1" data-d="1" aria-label="Ajouter un but">+</button>
+          </div>
         </div>
         <span class="sep">–</span>
         <div class="side">
           <select id="p2" aria-label="Joueur 2"></select>
-          <input id="s2" type="number" min="0" inputmode="numeric" value="0" aria-label="Buts joueur 2">
+          <div class="stepper">
+            <button type="button" data-step="s2" data-d="-1" aria-label="Retirer un but">−</button>
+            <input id="s2" type="number" min="0" inputmode="numeric" value="0" aria-label="Buts joueur 2">
+            <button type="button" data-step="s2" data-d="1" aria-label="Ajouter un but">+</button>
+          </div>
         </div>
       </div>
-      <button type="submit" class="full">Enregistrer le match</button>
+      <button type="submit" class="full" id="submitMatch">Enregistrer le match</button>
       <div id="matchMsg" class="msg"></div>
     </form>
   </section>
 
   <section>
-    <h2>Récap</h2>
+    <h2>Classement</h2>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Joueur</th><th>MJ</th><th>V</th><th>N</th><th>D</th><th>BP</th><th>BC</th><th>Diff</th><th>% V</th><th>V/D</th></tr>
+          <tr><th>Joueur</th><th>Pts</th><th>MJ</th><th>V</th><th>N</th><th>D</th><th>BP</th><th>BC</th><th>Diff</th><th>% V</th><th>V/D</th></tr>
         </thead>
         <tbody id="recap"></tbody>
       </table>
     </div>
-    <p class="muted">MJ = matchs joués · BP = buts pour · BC = buts contre · V/D = victoires ÷ défaites</p>
+    <p class="muted">Victoire = 3 pts · Nul = 1 pt · MJ = matchs joués · BP/BC = buts pour/contre · V/D = victoires ÷ défaites</p>
+  </section>
+
+  <section>
+    <h2>Forme et séries</h2>
+    <div id="form"></div>
+    <p class="muted">5 derniers matchs, du plus ancien au plus récent.</p>
+  </section>
+
+  <section>
+    <h2>Face-à-face</h2>
+    <div class="row">
+      <select id="h1" aria-label="Premier joueur"></select>
+      <span class="muted" style="flex:0 0 auto">vs</span>
+      <select id="h2" aria-label="Second joueur"></select>
+    </div>
+    <div id="h2h"></div>
+  </section>
+
+  <section>
+    <h2>Records</h2>
+    <div id="records" class="records"></div>
   </section>
 
   <section>
@@ -106,7 +184,7 @@
 
   <section>
     <h2>Données</h2>
-    <p class="muted">Les données sont enregistrées sur cet appareil. Exporte-les pour les sauvegarder ou les partager.</p>
+    <p class="muted">Les données sont enregistrées sur cet appareil. Exporte-les pour les sauvegarder.</p>
     <div class="tools">
       <button type="button" class="ghost" id="exportBtn">Exporter</button>
       <button type="button" class="ghost" id="importBtn">Importer</button>
@@ -119,6 +197,7 @@
 <script>
 const KEY = 'fifa-compteur-v1';
 let state = load();
+let editing = null; // index du match en cours de modification
 
 function load() {
   try {
@@ -132,12 +211,24 @@ function save() {
 }
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtDate = t => new Date(t).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const fmt1 = n => n.toFixed(1).replace('.', ',');
+
+// Résultats d'un joueur dans l'ordre chronologique : 'V', 'N' ou 'D'
+function resultsOf(name) {
+  const out = [];
+  for (const m of state.matches) {
+    if (m.p1 === name) out.push(m.s1 > m.s2 ? 'V' : m.s1 < m.s2 ? 'D' : 'N');
+    else if (m.p2 === name) out.push(m.s2 > m.s1 ? 'V' : m.s2 < m.s1 ? 'D' : 'N');
+  }
+  return out;
+}
 
 function stats() {
   const t = {};
   for (const p of state.players) t[p] = { mj: 0, v: 0, n: 0, d: 0, bp: 0, bc: 0 };
   for (const m of state.matches) {
-    for (const [me, op, mine, theirs] of [[m.p1, m.p2, m.s1, m.s2], [m.p2, m.p1, m.s2, m.s1]]) {
+    for (const [me, mine, theirs] of [[m.p1, m.s1, m.s2], [m.p2, m.s2, m.s1]]) {
       if (!t[me]) continue;
       const r = t[me];
       r.mj++; r.bp += mine; r.bc += theirs;
@@ -145,39 +236,141 @@ function stats() {
     }
   }
   return Object.entries(t)
-    .map(([name, r]) => ({ name, ...r, diff: r.bp - r.bc }))
-    .sort((a, b) => b.v - a.v || b.diff - a.diff || b.bp - a.bp || a.name.localeCompare(b.name));
+    .map(([name, r]) => ({ name, ...r, pts: r.v * 3 + r.n, diff: r.bp - r.bc }))
+    .sort((a, b) => b.pts - a.pts || b.diff - a.diff || b.bp - a.bp || a.name.localeCompare(b.name));
 }
 
-function render() {
-  // Joueurs
+function fillSelect(sel, def) {
+  const prev = sel.value;
+  sel.innerHTML = state.players.map(p => `<option>${esc(p)}</option>`).join('');
+  sel.value = state.players.includes(prev) ? prev : (state.players[def] || '');
+}
+
+function renderPlayers() {
   $('players').innerHTML = state.players.length
     ? state.players.map((p, i) => `<span class="chip">${esc(p)}<button class="x" data-del-player="${i}" aria-label="Supprimer ${esc(p)}">✕</button></span>`).join('')
     : '<span class="muted">Ajoute au moins deux prénoms pour commencer.</span>';
+  fillSelect($('p1'), 0); fillSelect($('p2'), 1);
+  fillSelect($('h1'), 0); fillSelect($('h2'), 1);
+}
 
-  // Sélecteurs
-  for (const [id, def] of [['p1', 0], ['p2', 1]]) {
-    const sel = $(id), prev = sel.value;
-    sel.innerHTML = state.players.map(p => `<option>${esc(p)}</option>`).join('');
-    sel.value = state.players.includes(prev) ? prev : (state.players[def] || '');
+function renderRecap(rows) {
+  $('recap').innerHTML = rows.length ? rows.map((r, i) => {
+    const pct = r.mj ? Math.round(r.v / r.mj * 100) + ' %' : '–';
+    const ratio = r.d ? fmt1(r.v / r.d) : (r.v ? '∞' : '–');
+    return `<tr><td><span class="rank">${i + 1}.</span><b>${esc(r.name)}</b></td><td class="pts">${r.pts}</td><td>${r.mj}</td>
+      <td class="w">${r.v}</td><td class="d">${r.n}</td><td class="l">${r.d}</td>
+      <td>${r.bp}</td><td>${r.bc}</td><td>${r.diff > 0 ? '+' : ''}${r.diff}</td><td>${pct}</td><td>${ratio}</td></tr>`;
+  }).join('') : '<tr><td colspan="11" class="muted">Aucun joueur.</td></tr>';
+}
+
+function renderForm(rows) {
+  const word = { V: 'victoire', N: 'nul', D: 'défaite' };
+  $('form').innerHTML = rows.length ? rows.map(r => {
+    const res = resultsOf(r.name);
+    const last = res.slice(-5);
+    const pills = Array.from({ length: 5 }, (_, i) => {
+      const x = last[i - (5 - last.length)];
+      return x ? `<span class="pill ${x}" title="${word[x]}">${x}</span>` : '<span class="pill empty"></span>';
+    }).join('');
+    // Série en cours
+    let cur = 0;
+    for (let i = res.length - 1; i >= 0 && res[i] === res[res.length - 1]; i--) cur++;
+    // Meilleure série de victoires
+    let best = 0, run = 0;
+    for (const x of res) { run = x === 'V' ? run + 1 : 0; best = Math.max(best, run); }
+    const curTxt = res.length ? `En cours : <b>${cur} ${res[res.length - 1]}</b>` : 'Aucun match';
+    return `<div class="form-row"><span class="name">${esc(r.name)}</span><span class="pills">${pills}</span>
+      <span class="streak">${curTxt}<br>Record : <b>${best} V</b></span></div>`;
+  }).join('') : '<p class="muted">Aucun joueur.</p>';
+}
+
+function renderH2H() {
+  const a = $('h1').value, b = $('h2').value, box = $('h2h');
+  if (!a || !b) { box.innerHTML = '<p class="muted">Ajoute au moins deux joueurs.</p>'; return; }
+  if (a === b) { box.innerHTML = '<p class="muted">Choisis deux joueurs différents.</p>'; return; }
+  let va = 0, vb = 0, n = 0, ga = 0, gb = 0;
+  const list = [];
+  state.matches.forEach(m => {
+    let x, y;
+    if (m.p1 === a && m.p2 === b) { x = m.s1; y = m.s2; }
+    else if (m.p1 === b && m.p2 === a) { x = m.s2; y = m.s1; }
+    else return;
+    ga += x; gb += y;
+    if (x > y) va++; else if (x < y) vb++; else n++;
+    list.push(m);
+  });
+  if (!list.length) { box.innerHTML = `<p class="muted" style="margin-top:12px">${esc(a)} et ${esc(b)} ne se sont pas encore affrontés.</p>`; return; }
+  const recent = list.slice(-5).reverse().map(m =>
+    `<li><span class="score"><span class="${m.s1 > m.s2 ? 'win' : ''}">${esc(m.p1)}</span> ${m.s1} – ${m.s2} <span class="${m.s2 > m.s1 ? 'win' : ''}">${esc(m.p2)}</span><br><span class="date">${fmtDate(m.date)}</span></span></li>`
+  ).join('');
+  box.innerHTML = `
+    <div class="h2h">
+      <div><div class="big w">${va}</div><div class="lbl">Victoires ${esc(a)}</div></div>
+      <div><div class="big d">${n}</div><div class="lbl">Nuls</div></div>
+      <div><div class="big l">${vb}</div><div class="lbl">Victoires ${esc(b)}</div></div>
+    </div>
+    <p class="h2h-goals muted">${list.length} match${list.length > 1 ? 's' : ''} · Buts : <b>${ga} – ${gb}</b></p>
+    <ul class="history">${recent}</ul>`;
+}
+
+function renderRecords(rows) {
+  const ms = state.matches;
+  if (!ms.length) { $('records').innerHTML = '<p class="muted" style="grid-column:1/-1">Joue quelques matchs pour voir les records.</p>'; return; }
+  const line = m => `${esc(m.p1)} ${m.s1} – ${m.s2} ${esc(m.p2)}`;
+  const recs = [];
+
+  const gap = ms.reduce((best, m) => Math.abs(m.s1 - m.s2) > Math.abs(best.s1 - best.s2) ? m : best, ms[0]);
+  if (gap.s1 !== gap.s2) recs.push(['Plus gros écart', line(gap), fmtDate(gap.date)]);
+
+  const goals = ms.reduce((best, m) => m.s1 + m.s2 > best.s1 + best.s2 ? m : best, ms[0]);
+  recs.push(['Match le plus prolifique', line(goals), `${goals.s1 + goals.s2} buts`]);
+
+  const played = rows.filter(r => r.mj);
+  if (played.length) {
+    const att = played.reduce((a, r) => r.bp / r.mj > a.bp / a.mj ? r : a);
+    recs.push(['Meilleure attaque', esc(att.name), `${fmt1(att.bp / att.mj)} buts marqués / match`]);
+    const def = played.reduce((a, r) => r.bc / r.mj < a.bc / a.mj ? r : a);
+    recs.push(['Meilleure défense', esc(def.name), `${fmt1(def.bc / def.mj)} buts encaissés / match`]);
+    const worst = played.reduce((a, r) => r.bc / r.mj > a.bc / a.mj ? r : a);
+    recs.push(['Pire défense', esc(worst.name), `${fmt1(worst.bc / worst.mj)} buts encaissés / match`]);
   }
 
-  // Récap
-  const rows = stats();
-  $('recap').innerHTML = rows.length ? rows.map(r => {
-    const pct = r.mj ? Math.round(r.v / r.mj * 100) + ' %' : '–';
-    const ratio = r.d ? (r.v / r.d).toFixed(2) : (r.v ? '∞' : '–');
-    return `<tr><td><b>${esc(r.name)}</b></td><td>${r.mj}</td><td class="w">${r.v}</td><td class="d">${r.n}</td><td class="l">${r.d}</td>
-      <td>${r.bp}</td><td>${r.bc}</td><td>${r.diff > 0 ? '+' : ''}${r.diff}</td><td>${pct}</td><td>${ratio}</td></tr>`;
-  }).join('') : '<tr><td colspan="10" class="muted">Aucun joueur.</td></tr>';
+  let bestRun = { n: 0 };
+  for (const p of state.players) {
+    let run = 0;
+    for (const x of resultsOf(p)) { run = x === 'V' ? run + 1 : 0; if (run > bestRun.n) bestRun = { n: run, p }; }
+  }
+  if (bestRun.n) recs.push(['Plus longue série de victoires', esc(bestRun.p), `${bestRun.n} victoire${bestRun.n > 1 ? 's' : ''} d’affilée`]);
 
-  // Historique (le plus récent en haut)
-  $('history').innerHTML = state.matches.length ? state.matches.map((m, i) => ({ m, i })).reverse().map(({ m, i }) => {
-    const c1 = m.s1 > m.s2 ? 'win' : '', c2 = m.s2 > m.s1 ? 'win' : '';
-    const date = new Date(m.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-    return `<li><span class="score"><span class="${c1}">${esc(m.p1)}</span> ${m.s1} – ${m.s2} <span class="${c2}">${esc(m.p2)}</span><br><span class="date">${date}</span></span>
-      <button class="x" data-del-match="${i}" aria-label="Supprimer le match">✕</button></li>`;
-  }).join('') : '<li class="muted">Aucun match pour l’instant.</li>';
+  $('records').innerHTML = recs.map(([t, v, s]) => `<div class="rec"><div class="t">${t}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+}
+
+function renderHistory() {
+  $('history').innerHTML = state.matches.length ? state.matches.map((m, i) => ({ m, i })).reverse().map(({ m, i }) => `
+    <li class="${i === editing ? 'is-editing' : ''}"><span class="score"><span class="${m.s1 > m.s2 ? 'win' : ''}">${esc(m.p1)}</span> ${m.s1} – ${m.s2} <span class="${m.s2 > m.s1 ? 'win' : ''}">${esc(m.p2)}</span><br><span class="date">${fmtDate(m.date)}</span></span>
+      <button class="x" data-edit-match="${i}" aria-label="Modifier le match">✏️</button>
+      <button class="x" data-del-match="${i}" aria-label="Supprimer le match">✕</button></li>`).join('')
+    : '<li class="muted">Aucun match pour l’instant.</li>';
+}
+
+function render() {
+  renderPlayers();
+  const rows = stats();
+  renderRecap(rows);
+  renderForm(rows);
+  renderH2H();
+  renderRecords(rows);
+  renderHistory();
+  $('matchSection').classList.toggle('editing', editing !== null);
+  $('matchTitle').textContent = editing !== null ? 'Modifier le match' : 'Nouveau match';
+  $('submitMatch').textContent = editing !== null ? 'Enregistrer les modifications' : 'Enregistrer le match';
+}
+
+function stopEditing() {
+  editing = null;
+  $('s1').value = 0; $('s2').value = 0;
+  $('matchMsg').textContent = '';
 }
 
 $('addPlayer').addEventListener('submit', e => {
@@ -198,13 +391,37 @@ $('addMatch').addEventListener('submit', e => {
   if (!p1 || !p2) return msg.textContent = 'Ajoute d’abord deux joueurs.';
   if (p1 === p2) return msg.textContent = 'Choisis deux joueurs différents.';
   if (!(s1 >= 0) || !(s2 >= 0)) return msg.textContent = 'Score invalide.';
-  msg.textContent = '';
-  state.matches.push({ p1, p2, s1, s2, date: Date.now() });
-  $('s1').value = 0; $('s2').value = 0;
+  if (editing !== null) {
+    state.matches[editing] = { ...state.matches[editing], p1, p2, s1, s2 };
+  } else {
+    state.matches.push({ p1, p2, s1, s2, date: Date.now() });
+  }
+  stopEditing();
   save(); render();
 });
 
+$('cancelEdit').addEventListener('click', () => { stopEditing(); render(); });
+$('h1').addEventListener('change', renderH2H);
+$('h2').addEventListener('change', renderH2H);
+
 document.addEventListener('click', e => {
+  const step = e.target.closest('[data-step]');
+  if (step) {
+    const input = $(step.dataset.step);
+    input.value = Math.max(0, (parseInt(input.value, 10) || 0) + +step.dataset.d);
+    return;
+  }
+  const ep = e.target.closest('[data-edit-match]');
+  if (ep) {
+    editing = +ep.dataset.editMatch;
+    const m = state.matches[editing];
+    render();
+    $('p1').value = m.p1; $('p2').value = m.p2;
+    $('s1').value = m.s1; $('s2').value = m.s2;
+    $('matchMsg').textContent = '';
+    $('matchSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
   const dp = e.target.closest('[data-del-player]');
   if (dp) {
     const name = state.players[+dp.dataset.delPlayer];
@@ -212,11 +429,14 @@ document.addEventListener('click', e => {
     if (!confirm(`Supprimer ${name}${n ? ` et ses ${n} match(s)` : ''} ?`)) return;
     state.players = state.players.filter(p => p !== name);
     state.matches = state.matches.filter(m => m.p1 !== name && m.p2 !== name);
+    stopEditing();
     save(); render();
+    return;
   }
   const dm = e.target.closest('[data-del-match]');
   if (dm && confirm('Supprimer ce match ?')) {
     state.matches.splice(+dm.dataset.delMatch, 1);
+    stopEditing();
     save(); render();
   }
 });
@@ -237,12 +457,12 @@ $('importFile').addEventListener('change', async e => {
     const s = JSON.parse(await file.text());
     if (!Array.isArray(s.players) || !Array.isArray(s.matches)) throw 0;
     if (!confirm('Remplacer les données actuelles par ce fichier ?')) return;
-    state = s; save(); render();
+    state = s; stopEditing(); save(); render();
   } catch (_) { alert('Fichier invalide.'); }
   e.target.value = '';
 });
 $('resetBtn').addEventListener('click', () => {
-  if (confirm('Effacer tous les joueurs et tous les matchs ?')) { state = { players: [], matches: [] }; save(); render(); }
+  if (confirm('Effacer tous les joueurs et tous les matchs ?')) { state = { players: [], matches: [] }; stopEditing(); save(); render(); }
 });
 
 render();
