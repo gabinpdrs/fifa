@@ -93,6 +93,9 @@
   ul.history li.is-editing { background: var(--accent-soft); border-radius: 8px; padding-left: 8px; }
   .win { font-weight: 700; color: var(--accent); }
   .tools { display: flex; gap: 8px; flex-wrap: wrap; }
+  .alert { display: none; background: #fdecec; color: #8f1d1d; border: 1px solid #f5c2c2; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; font-size: .9rem; }
+  .alert.show { display: block; }
+  .where { background: var(--accent-soft); color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: .85rem; margin: 0 0 12px; }
 </style>
 </head>
 <body>
@@ -106,6 +109,10 @@
   </div>
 </header>
 <main>
+  <div id="storageAlert" class="alert"><b>Attention : tes données ne sont pas enregistrées.</b><br>
+    Ce navigateur bloque l’enregistrement (navigation privée, ou lien ouvert depuis une autre appli). Tout disparaîtra si tu actualises.
+    Ouvre l’appli depuis son icône sur l’écran d’accueil, ou dans Safari / Chrome en mode normal.</div>
+
   <section>
     <h2>Joueurs</h2>
     <form id="addPlayer" class="row">
@@ -184,6 +191,7 @@
 
   <section>
     <h2>Données</h2>
+    <p id="where" class="where"></p>
     <p class="muted">Les données sont enregistrées sur cet appareil. Exporte-les pour les sauvegarder.</p>
     <div class="tools">
       <button type="button" class="ghost" id="exportBtn">Exporter</button>
@@ -207,7 +215,13 @@ function load() {
   return { players: [], matches: [] };
 }
 function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  let ok = false;
+  try {
+    const json = JSON.stringify(state);
+    localStorage.setItem(KEY, json);
+    ok = localStorage.getItem(KEY) === json;
+  } catch (e) {}
+  document.getElementById('storageAlert').classList.toggle('show', !ok);
 }
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -464,6 +478,20 @@ $('importFile').addEventListener('change', async e => {
 $('resetBtn').addEventListener('click', () => {
   if (confirm('Effacer tous les joueurs et tous les matchs ?')) { state = { players: [], matches: [] }; stopEditing(); save(); render(); }
 });
+
+// Où l'appli est ouverte : sur iPhone, l'icône de l'écran d'accueil et Safari ont des données séparées.
+const standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+$('where').innerHTML = standalone
+  ? '📱 Ouvert depuis l’<b>icône de l’écran d’accueil</b>. Continue à toujours l’ouvrir d’ici pour retrouver tes scores.'
+  : '🌐 Ouvert dans le <b>navigateur</b>. Si tu as ajouté l’appli à ton écran d’accueil, ses données sont séparées de celles-ci : utilise toujours le même accès (de préférence l’icône).';
+
+// Vérifie dès l'ouverture que l'enregistrement fonctionne, et demande au navigateur de ne pas effacer les données.
+try {
+  localStorage.setItem(KEY + '-test', '1');
+  if (localStorage.getItem(KEY + '-test') !== '1') throw 0;
+  localStorage.removeItem(KEY + '-test');
+} catch (e) { $('storageAlert').classList.add('show'); }
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
 render();
 </script>
