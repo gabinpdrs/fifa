@@ -3,30 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b1220">
+<meta name="theme-color" content="#1e88e5">
 <title>Compteur FIFA</title>
 <style>
   :root {
-    --bg: #0b1220; --card: #141d30; --line: #24314d; --text: #e8edf7; --muted: #8a97b3;
-    --accent: #22c55e; --lose: #ef4444; --draw: #eab308;
+    --bg: #f3f8fd; --card: #ffffff; --line: #dce8f5; --text: #0f2a47; --muted: #6b819c;
+    --accent: #1e88e5; --accent-soft: #e6f2fc; --input: #f8fbfe;
+    --win: #1e88e5; --lose: #d64545; --draw: #8a9bb0;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text);
     font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 640px; margin: 0 auto; padding: 16px 16px 48px; }
-  h1 { font-size: 1.5rem; margin: 8px 0 16px; }
-  h2 { font-size: 1.1rem; margin: 0 0 12px; }
-  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+  header { background: var(--accent); color: #fff; padding: 20px 16px 56px; }
+  header h1 { max-width: 640px; margin: 0 auto; font-size: 1.4rem; font-weight: 700; letter-spacing: .02em; }
+  header p { max-width: 640px; margin: 4px auto 0; opacity: .85; font-size: .9rem; }
+  main { max-width: 640px; margin: -40px auto 0; padding: 0 16px 48px; }
+  h2 { font-size: .8rem; margin: 0 0 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(15, 42, 71, .05); }
   input, select, button { font: inherit; color: inherit; }
-  input, select { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
-  button { border: 0; border-radius: 10px; padding: 10px 14px; background: var(--accent); color: #04120a; font-weight: 600; cursor: pointer; }
-  button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 500; }
+  input, select { width: 100%; background: var(--input); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  button { border: 0; border-radius: 10px; padding: 10px 14px; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
+  button.ghost { background: #fff; color: var(--accent); border: 1px solid var(--line); font-weight: 500; }
   button.x { background: transparent; color: var(--muted); padding: 4px 8px; }
   .row { display: flex; gap: 8px; align-items: center; }
   .row > * { flex: 1; }
   .row > button { flex: 0 0 auto; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .chip { background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 4px 4px 4px 12px; display: flex; align-items: center; gap: 2px; }
+  .chip { background: var(--accent-soft); color: var(--accent); font-weight: 500; border: 1px solid var(--line); border-radius: 999px; padding: 4px 4px 4px 12px; display: flex; align-items: center; gap: 2px; }
   .match { display: grid; grid-template-columns: 1fr 16px 1fr; gap: 8px; align-items: center; }
   .match .side { display: flex; flex-direction: column; gap: 8px; }
   .match input[type=number] { text-align: center; font-size: 1.6rem; font-weight: 700; padding: 8px 4px; }
@@ -39,18 +42,21 @@
   th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--line); }
   th { color: var(--muted); font-weight: 500; font-size: .8rem; }
   td:first-child, th:first-child { text-align: left; }
-  .w { color: var(--accent); } .l { color: var(--lose); } .d { color: var(--draw); }
+  .w { color: var(--win); font-weight: 600; } .l { color: var(--lose); } .d { color: var(--draw); }
   ul.history { list-style: none; margin: 0; padding: 0; }
   ul.history li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
   ul.history .score { flex: 1; }
   ul.history .date { color: var(--muted); font-size: .8rem; }
-  .win { font-weight: 700; }
+  .win { font-weight: 700; color: var(--accent); }
   .tools { display: flex; gap: 8px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
-<main>
+<header>
   <h1>⚽ Compteur FIFA</h1>
+  <p>Nos matchs, nos stats.</p>
+</header>
+<main>
 
   <section>
     <h2>Joueurs</h2>
